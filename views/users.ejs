@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — Friend Web App</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Users List</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/users">Users</a>
+        <a href="/users/new">Add User</a>
+      </nav>
+    </header>
+    
+    <main>
+      <% if (users.length === 0) { %>
+        <p>No users found. <a href="/users/new">Add the first user</a>.</p>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(user => { %>
+              <tr>
+                <td><%= user.id %></td>
+                <td><%= user.name %></td>
+                <td><%= user.email %></td>
+                <td><%= user.created_at %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+      
+      <p><a href="/users/new" class="btn">Add New User</a></p>
+    </main>
+    
+    <footer>
+      <p>Simple web app for DevOps CI/CD assignment</p>
+    </footer>
+  </div>
+</body>
+</html>

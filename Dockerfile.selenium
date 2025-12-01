@@ -1,0 +1,28 @@
+# Selenium test runner image with Chromium
+FROM node:18
+
+# Install Chromium and chromium-driver (Debian packages for version match)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies for tests)
+RUN npm install
+
+# Copy test files and application (tests may need app structure)
+COPY . .
+
+# Set Chrome path for Selenium
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Run tests
+CMD ["npm", "test"]
