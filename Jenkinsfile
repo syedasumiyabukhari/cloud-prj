@@ -102,11 +102,6 @@ pipeline {
           fi
           
           echo "Health check passed, app is ready!"
-          
-          # If we get here, app failed to start
-          echo "App failed to start after 60 seconds"
-          docker logs ${APP_CONTAINER}
-          exit 1
         """
       }
     }
