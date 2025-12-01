@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
   res.render('index', { title: 'Welcome' });
 });
 
+// Lightweight health endpoint for CI readiness checks
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.get('/users', (req, res) => {
   db.all('SELECT * FROM users', [], (err, rows) => {
     if (err) {
