@@ -68,8 +68,11 @@ pipeline {
       steps {
         echo "Starting app container on network ${NETWORK_NAME}"
         sh """
-          # Create Docker network
-          docker network create ${NETWORK_NAME} || true
+          # Ensure clean state: remove any existing container and network
+          docker rm -f ${APP_CONTAINER} 2>/dev/null || true
+          
+          # Create Docker network (idempotent)
+          docker network create ${NETWORK_NAME} 2>/dev/null || true
           
           # Run app container in background
           docker run -d --name ${APP_CONTAINER} \
