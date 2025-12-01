@@ -68,17 +68,29 @@ pipeline {
       steps {
         echo "Starting app container on network ${NETWORK_NAME}"
         sh """
-          # Ensure clean state: remove any existing container and network
+          # Ensure clean state: remove any existing container
           docker rm -f ${APP_CONTAINER} 2>/dev/null || true
           
-          # Create Docker network (idempotent)
-          docker network create ${NETWORK_NAME} 2>/dev/null || true
+          # Remove any existing network
+          docker network rm ${NETWORK_NAME} 2>/dev/null || true
+          
+          # Create Docker network
+          docker network create ${NETWORK_NAME}
+          echo "Network ${NETWORK_NAME} created successfully"
+          
+          # Verify network exists
+          docker network inspect ${NETWORK_NAME} > /dev/null
           
           # Run app container in background
           docker run -d --name ${APP_CONTAINER} \
             --network ${NETWORK_NAME} \
             -p 3000:3000 \
             ${APP_IMAGE}
+          
+          echo "Container ${APP_CONTAINER} started"
+          
+          # Verify container is running
+          docker ps | grep ${APP_CONTAINER}
           
           # Wait for app to be ready with retries (use Node inside the container for health check)
           echo "Waiting for app to start (host-side health check)..."
@@ -102,6 +114,8 @@ pipeline {
           fi
           
           echo "Health check passed, app is ready!"
+          echo "Container status:"
+          docker ps | grep ${APP_CONTAINER}
         """
       }
     }
@@ -117,6 +131,16 @@ pipeline {
       steps {
         echo "Running Selenium tests against ${APP_CONTAINER} on ${NETWORK_NAME}"
         sh """
+          # Verify network still exists
+          echo "Verifying network ${NETWORK_NAME}..."
+          docker network inspect ${NETWORK_NAME} > /dev/null
+          
+          # Verify container is still running
+          echo "Verifying container ${APP_CONTAINER}..."
+          docker ps | grep ${APP_CONTAINER}
+          
+          # Run Selenium tests
+          echo "Starting Selenium test container..."
           docker run --rm \
             --network ${NETWORK_NAME} \
             -e BASE_URL=http://${APP_CONTAINER}:3000 \
