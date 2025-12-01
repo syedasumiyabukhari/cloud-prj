@@ -1,0 +1,106 @@
+pipeline {
+  agent any
+  
+  tools {
+    nodejs 'NodeJS' // You may need to configure this in Jenkins Global Tool Configuration
+  }
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        echo 'Checking out repository...'
+        checkout scm
+      }
+    }
+    
+    stage('Install Dependencies') {
+      steps {
+        echo 'Installing Node.js dependencies...'
+        sh 'npm install'
+      }
+    }
+    
+    stage('Build') {
+      steps {
+        echo 'Build stage - verifying project structure'
+        sh 'ls -la'
+      }
+    }
+    
+    stage('Unit Test') {
+      steps {
+        echo 'Unit test stage (add npm test:unit when available)'
+        // Placeholder for future unit tests
+        sh 'echo "No unit tests configured yet"'
+      }
+    }
+    
+    stage('Start App') {
+      steps {
+        echo 'Starting application in background...'
+        sh '''
+          # Start app in background
+          nohup node app.js > app.log 2>&1 &
+          echo $! > app.pid
+          
+          # Wait for app to start
+          sleep 5
+          
+          # Check if app is running
+          if ps -p $(cat app.pid) > /dev/null; then
+            echo "App started successfully (PID: $(cat app.pid))"
+          else
+            echo "App failed to start"
+            exit 1
+          fi
+        '''
+      }
+    }
+    
+    stage('Health Check') {
+      steps {
+        echo 'Checking if app is responding...'
+        sh '''
+          # Simple health check
+          curl -f http://localhost:3000 || exit 1
+          echo "App is healthy and responding"
+        '''
+      }
+    }
+    
+    stage('Deploy') {
+      steps {
+        echo 'Packaging artifacts...'
+        sh '''
+          mkdir -p deploy
+          tar -czf deploy/artifacts.tgz public views app.js db.js package.json
+        '''
+        archiveArtifacts artifacts: 'deploy/artifacts.tgz', fingerprint: true
+      }
+    }
+  }
+  
+  post {
+    always {
+      echo 'Cleaning up...'
+      sh '''
+        # Stop the app if it's running
+        if [ -f app.pid ]; then
+          kill $(cat app.pid) || true
+          rm app.pid
+        fi
+        
+        # Kill any node processes on port 3000 (safety cleanup)
+        pkill -f "node app.js" || true
+      '''
+    }
+    
+    success {
+      echo 'Pipeline completed successfully!'
+    }
+    
+    failure {
+      echo 'Pipeline failed. Check logs above.'
+    }
+  }
+}

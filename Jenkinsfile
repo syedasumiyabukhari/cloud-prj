@@ -16,6 +16,21 @@ pipeline {
       }
     }
     
+    stage('Check Docker') {
+      steps {
+        echo 'Verifying Docker is available...'
+        sh '''
+          if ! command -v docker &> /dev/null; then
+            echo "ERROR: Docker is not installed or not in PATH"
+            echo "Please install Docker on the Jenkins agent or use Jenkinsfile.no-docker"
+            exit 1
+          fi
+          docker --version
+          docker info || echo "Warning: Docker daemon may not be running"
+        '''
+      }
+    }
+    
     stage('Build') {
       steps {
         echo 'Build stage (placeholder for real build tasks)'
