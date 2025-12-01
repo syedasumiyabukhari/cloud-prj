@@ -20,13 +20,14 @@ pipeline {
       steps {
         echo 'Verifying Docker is available...'
         sh '''
-          if ! command -v docker &> /dev/null; then
+          if ! command -v docker > /dev/null 2>&1; then
             echo "ERROR: Docker is not installed or not in PATH"
             echo "Please install Docker on the Jenkins agent or use Jenkinsfile.no-docker"
             exit 1
           fi
+          echo "Docker found at: $(which docker)"
           docker --version
-          docker info || echo "Warning: Docker daemon may not be running"
+          docker info > /dev/null 2>&1 || echo "Warning: Docker daemon may not be running properly"
         '''
       }
     }
