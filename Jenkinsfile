@@ -77,12 +77,22 @@ pipeline {
             -p 3000:3000 \
             ${APP_IMAGE}
           
-          # Wait for app to be ready (simple sleep or use curl check)
-          sleep 5
+          # Wait for app to be ready with retries
+          echo "Waiting for app to start..."
+          for i in \$(seq 1 30); do
+            if docker exec ${APP_CONTAINER} wget -q --spider http://localhost:3000 2>/dev/null; then
+              echo "App is ready after \$i attempts"
+              docker logs ${APP_CONTAINER}
+              exit 0
+            fi
+            echo "Attempt \$i: App not ready yet, waiting..."
+            sleep 2
+          done
           
-          # Health check (optional)
-          docker exec ${APP_CONTAINER} wget -q --spider http://localhost:3000 || \
-            (echo "App failed to start" && exit 1)
+          # If we get here, app failed to start
+          echo "App failed to start after 60 seconds"
+          docker logs ${APP_CONTAINER}
+          exit 1
         """
       }
     }
