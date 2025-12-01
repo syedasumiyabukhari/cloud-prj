@@ -77,10 +77,10 @@ pipeline {
             -p 3000:3000 \
             ${APP_IMAGE}
           
-          # Wait for app to be ready with retries
+          # Wait for app to be ready with retries (use Node inside the container for health check)
           echo "Waiting for app to start..."
           for i in \$(seq 1 30); do
-            if docker exec ${APP_CONTAINER} wget -q --spider http://localhost:3000 2>/dev/null; then
+            if docker exec ${APP_CONTAINER} node -e "require('http').get('http://localhost:3000', r => process.exit(0)).on('error', () => process.exit(1))"; then
               echo "App is ready after \$i attempts"
               docker logs ${APP_CONTAINER}
               exit 0
