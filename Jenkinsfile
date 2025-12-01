@@ -81,16 +81,23 @@ pipeline {
             ${APP_IMAGE}
           
           # Wait for app to be ready with retries (use Node inside the container for health check)
-          echo "Waiting for app to start..."
+          echo "Waiting for app to start (host-side health check)..."
           for i in \$(seq 1 30); do
-            if docker exec ${APP_CONTAINER} node -e "require('http').get('http://localhost:3000/health', r => process.exit(0)).on('error', () => process.exit(1))"; then
+            if curl -sf http://localhost:3000/health >/dev/null 2>&1; then
               echo "App is ready after \$i attempts"
               docker logs ${APP_CONTAINER}
-              exit 0
+              break
             fi
             echo "Attempt \$i: App not ready yet, waiting..."
             sleep 2
           done
+          
+          # Verify one last time and fail if still not ready
+          if ! curl -sf http://localhost:3000/health >/dev/null 2>&1; then
+            echo "App failed to start after 60 seconds"
+            docker logs ${APP_CONTAINER}
+            exit 1
+          fi
           
           # If we get here, app failed to start
           echo "App failed to start after 60 seconds"
