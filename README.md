@@ -5,7 +5,7 @@ A small example Node.js web application used for teaching/assignment CI/CD conce
 ## Key capabilities
 
 **Web app (Express) serving:**
-- Home page (`/`)
+- Home  page (`/`)
 - Users listing (`/users`)
 - New user form (`/users/new`)
 - Create user (`POST /users`)
